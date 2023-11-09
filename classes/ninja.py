@@ -22,7 +22,7 @@ class Ninja(pygame.sprite.Sprite):
 
     def update(self):
         """ Atualiza os frames da animação de forma independente do FPS do game"""
-        if self.elapsed == 0 or pygame.time.get_ticks() - self.elapsed > 50: # Regula a velocidade da animação
+        if self.elapsed == 0 or pygame.time.get_ticks() - self.elapsed > 20: # Regula a velocidade da animação
             self.animate()
             self.elapsed = pygame.time.get_ticks()
         self.image = self.animation_frames[self.frame_index]
