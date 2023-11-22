@@ -1,28 +1,27 @@
 import pygame
 import os
 
-velocidade = 20
+GRAVITY = 0.5
+JUMP_VELOCITY = -10
+FRICTION = 0.9
+ACCELERATION = 0.5
 
 class Ninja(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.rect = pygame.Rect(x, y, 32, 32)
-        self.x = x
-        self.y = y
-        self.velX = 0
-        self.velY = 0
         self.animation_frames = []
         self.frame_index = 0
+        self.image = pygame.image.load("assets/ninja/idle/Idle__000.png").convert_alpha()
+        self.rect = self.image.get_rect(midbottom=(x, y))
+        self.x_velocity = 0
+        self.y_velocity = 0
         self.correndo = False
-        self.direcao = 1  # 1 para direita, -1 para esquerda
-        self.atacando = False  # Adiciona uma variável para controlar o ataque
-        self.load_animation()
-        self.image = self.animation_frames[self.frame_index]
-        self.rect.topleft = (x, y)
+        self.direcao = 1
+        self.atacando = False
         self.elapsed = 0
 
     def load_animation(self):
-        self.animation_frames = []  # Limpa as animações existentes
+        animation_folder = ""
         if self.atacando:
             animation_folder = "assets/ninja/attack"
         elif self.correndo:
@@ -30,50 +29,41 @@ class Ninja(pygame.sprite.Sprite):
         else:
             animation_folder = "assets/ninja/idle"
 
+        self.animation_frames = []  # Limpa as animações existentes
         for filename in os.listdir(animation_folder):
             img = pygame.image.load(os.path.join(animation_folder, filename))
             self.animation_frames.append(img)
 
-    def draw(self, win):
-        pass  # Se precisar de uma função para desenhar, adicione aqui
-
-    def update(self):
-        if self.elapsed == 0 or pygame.time.get_ticks() - self.elapsed > 20:
-            self.animate()
+    def update(self, platform_group):
+        if self.elapsed == 0 or pygame.time.get_ticks() - self.elapsed > 10:
+            self.load_animation()
             self.elapsed = pygame.time.get_ticks()
+
+        self.animate()  # Corrigindo aqui para chamar o método animate
+
         self.image = pygame.transform.flip(self.animation_frames[self.frame_index], self.direcao == -1, False)
-        self.rect.topleft = (self.x, self.y)
+        self.rect.topleft = (self.rect.x + self.x_velocity, self.rect.y + self.y_velocity)
 
         keys = pygame.key.get_pressed()
 
-        if keys[pygame.K_LEFT]:
-            self.velX = -velocidade
-            self.correndo = True
-            self.direcao = -1  # Define a direção para a esquerda
-        elif keys[pygame.K_RIGHT]:
-            self.velX = velocidade
-            self.correndo = True
-            self.direcao = 1  # Define a direção para a direita
-        else:
-            self.velX = 0
-            self.correndo = False
+        self.y_velocity += GRAVITY
+        self.x_velocity *= FRICTION
 
-        if keys[pygame.K_UP]:
-            self.velY = -velocidade
-        elif keys[pygame.K_DOWN]:
-            self.velY = velocidade
+        if keys[pygame.K_LEFT]:
+            self.x_velocity += -ACCELERATION
+            self.correndo = True
+            self.direcao = -1
+        elif keys[pygame.K_RIGHT]:
+            self.x_velocity += ACCELERATION
+            self.correndo = True
+            self.direcao = 1
         else:
-            self.velY = 0
+            self.correndo = False
 
         if keys[pygame.K_x]:
             self.atacando = True
         else:
             self.atacando = False
-
-        self.x += self.velX
-        self.y += self.velY
-
-        self.load_animation()
 
     def animate(self):
         self.frame_index += 1
